@@ -1,108 +1,277 @@
 # VulnSight - Security Auditing & Vulnerability Management Platform
 
-VulnSight is an asynchronous, web-based security auditing framework designed to scan target websites for common vulnerabilities. It categorizes identified threats, generates professional PDF assessment reports, and leverages AI models to provide structured remediation guidance and secure coding examples.
+VulnSight is an asynchronous web-based security auditing framework designed to scan target websites for common vulnerabilities. The platform categorizes identified threats, generates professional PDF assessment reports, and leverages AI models to provide structured remediation guidance and secure coding examples.
 
-This version has been re-engineered from the ground up to utilize a strictly decoupled frontend-backend architecture, solving synchronous request-blocking bottlenecks by shifting scans to an asynchronous queue (Celery + Redis) and running security engines (Nmap, Nikto, OWASP ZAP) inside ephemeral Docker containers.
-
----
-
-## 🚀 Key Features
-
-- **Asynchronous Scan Queue**: Utilizes Celery and Redis to run long-running scans in the background. Web requests are unblocked instantly, and the UI polls for scan status (`pending` -> `running` -> `completed`/`failed`).
-- **Zero Local Executable Installs**: Shipped completely with Docker-run wrappers. All external security scanners run inside Docker containers, eliminating host binary requirements (`nmap.exe` or `nikto` command setups).
-- **Docker Networking Translation**: Targets pointing to local loopbacks (`localhost` or `127.0.0.1`) are automatically translated to `host.docker.internal` so containers can scan host services.
-- **Custom Auditing Scanners**: Custom BeautifulSoup-based web crawlers for identifying Reflected Cross-Site Scripting (XSS) and SQL Injection (SQLi) vulnerabilities in HTML forms.
-- **AI Remediation Suggestions**: Automatically feeds discovered vulnerabilities to Google Gemini (`gemini-1.5-flash`) or OpenAI (`gpt-3.5-turbo`) to produce structured security fixes. Implements a rules-based fallback engine to generate simulated remediation if API keys are absent.
-- **One-Click PDF Reports**: Generates dynamic, styling-customized PDF audit reports using ReportLab, displaying executive summary matrices, threat severity charts, evidence logs, and AI secure coding blocks.
-- **Modern Dashboard**: A clean React + Tailwind CSS single-page interface with live scanner tracking and JWT-based authentication.
+This version has been re-engineered with a fully decoupled frontend-backend architecture, eliminating synchronous request bottlenecks by moving scans to an asynchronous queue (Celery + Redis) and executing security scanners (Nmap, Nikto, and OWASP ZAP) inside ephemeral Docker containers.
 
 ---
 
-## 🛠️ Technology Stack
+# 🚀 Features
 
-### Frontend
-- **Framework**: React 19, Vite
-- **Styling**: Tailwind CSS
-- **Routing**: React Router DOM v7
-- **HTTP Client**: Axios (configured with automated JWT authorization interceptors)
+## Asynchronous Scan Processing
 
-### Backend
-- **Framework**: Django, Django REST Framework (DRF)
-- **Database**: PostgreSQL (native Django ORM integration)
-- **Task Worker & Broker**: Celery, Redis
-- **Security Scanners**: Ephemeral Docker images (`sullo/nikto`, `instrumentisto/nmap`, `owasp/zap2docker-stable`)
-- **Document Generation**: ReportLab
-- **AI Integrations**: Google Generative AI (Gemini SDK), OpenAI SDK
+* Uses Celery and Redis to execute long-running scans in the background.
+* Prevents HTTP request blocking.
+* Real-time scan status tracking (`Pending → Running → Completed/Failed`).
+
+## Containerized Security Scanners
+
+* No local installation of Nmap, Nikto, or OWASP ZAP required.
+* All scanners execute within isolated Docker containers.
+* Simplifies deployment and environment setup.
+
+## Docker Networking Support
+
+* Automatically converts `localhost` and `127.0.0.1` targets to `host.docker.internal`.
+* Enables containers to access services running on the host machine.
+
+## Custom Vulnerability Detection
+
+* BeautifulSoup-based crawlers for:
+
+  * Reflected Cross-Site Scripting (XSS)
+  * SQL Injection (SQLi)
+* Automated form discovery and payload testing.
+
+## AI-Powered Remediation
+
+* Integrates with:
+
+  * Google Gemini (`gemini-1.5-flash`)
+  * OpenAI (`gpt-3.5-turbo`)
+* Generates:
+
+  * Vulnerability explanations
+  * Remediation recommendations
+  * Secure coding examples
+* Includes a rule-based fallback remediation engine when API keys are unavailable.
+
+## Professional PDF Reporting
+
+* Generates security assessment reports using ReportLab.
+* Includes:
+
+  * Executive summaries
+  * Severity breakdowns
+  * Evidence logs
+  * AI-generated remediation guidance
+
+## Modern User Dashboard
+
+* React-based single-page application.
+* JWT authentication and authorization.
+* Live scan monitoring and report downloads.
 
 ---
 
-## 📂 Project Directory Structure
+# 🛠 Technology Stack
+
+## Frontend
+
+| Technology          | Purpose           |
+| ------------------- | ----------------- |
+| React 19            | User Interface    |
+| Vite                | Build Tool        |
+| Tailwind CSS        | Styling           |
+| React Router DOM v7 | Routing           |
+| Axios               | API Communication |
+| JWT                 | Authentication    |
+
+## Backend
+
+| Technology            | Purpose                    |
+| --------------------- | -------------------------- |
+| Django                | Backend Framework          |
+| Django REST Framework | REST APIs                  |
+| PostgreSQL            | Database                   |
+| Celery                | Background Task Processing |
+| Redis                 | Message Broker             |
+| Docker                | Scanner Isolation          |
+| ReportLab             | PDF Generation             |
+| Gemini API            | AI Remediation             |
+| OpenAI API            | AI Remediation             |
+
+---
+
+# 📂 Project Structure
 
 ```text
-vulnsight-2.0/
-├── client/                     # React + Vite Frontend App
+vulnsight/
+├── client/
 │   ├── src/
-│   │   ├── components/         # Reusable UI Components
-│   │   ├── pages/              # Dashboard, Login, Register, ScanDetails
-│   │   ├── utils/              # API Client (Axios), AuthContext
-│   │   └── App.jsx             # React Routes
-│   └── vite.config.js          # Port 5000 & Proxy Configurations
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   └── vite.config.js
 │
-└── server/                     # Django REST Backend
-    ├── core/                   # Django Settings, URLs, and Celery app setup
-    ├── requirements.txt        # Backend dependencies list
-    ├── .env.example            # Environment configuration template
-    └── apps/                   # Django Modular Applications
-        ├── authentication/     # Custom User & Simple JWT endpoints
-        ├── scans/              # Scans scheduling, tasks, & Docker integrations
-        ├── vulnerabilities/    # Vulnerability databases & findings models
-        ├── ai_remediation/     # Gemini/OpenAI integrations & Fallbacks
-        └── reports/            # Dynamically compiled ReportLab PDFs
+└── server/
+    ├── core/
+    ├── requirements.txt
+    ├── .env.example
+    └── apps/
+        ├── authentication/
+        ├── scans/
+        ├── vulnerabilities/
+        ├── ai_remediation/
+        └── reports/
+```
 
+---
 
+# ⚙️ System Architecture
 
-
-**## System Architecture and Scan Workflow**
-
-[User requests scan from React UI] 
+```text
+[React Client]
        │
        ▼
-[Django REST Endpoint: POST /api/scans] ──► (Saves Scan as "Pending")
+[Django REST API]
        │
        ▼
-[Enqueue Asynchronous Celery Task]
-       │
-       ▼ [Celery Worker starts task]
-(Updates Scan status to "Running")
-       │
-       ├─► [Runs Custom XSS/SQLi BS4 Crawlers]
-       ├─► [Spawns Docker: instrumentisto/nmap (Parses XML)]
-       ├─► [Spawns Docker: sullo/nikto (Parses Stdout)]
-       └─► [Queries Docker: owasp/zap2docker-stable (API Calls)]
-       │
-       ▼ [Vulnerabilities Found]
-(Pipes vulnerability data to Gemini/OpenAI API) ──► (Generates Fix Guides)
+[Create Scan Request]
        │
        ▼
-(Updates Scan status to "Completed" + saves AI suggestions)
+[Celery Queue + Redis Broker]
        │
        ▼
-[React UI polls endpoint & renders complete details + PDF download button]
+[Celery Worker]
+       │
+       ├── Custom XSS Scanner
+       ├── Custom SQLi Scanner
+       ├── Dockerized Nmap
+       ├── Dockerized Nikto
+       └── Dockerized OWASP ZAP
+       │
+       ▼
+[Vulnerability Findings]
+       │
+       ▼
+[Gemini / OpenAI]
+       │
+       ▼
+[Remediation Generation]
+       │
+       ▼
+[PostgreSQL Storage]
+       │
+       ▼
+[PDF Report Generation]
+       │
+       ▼
+[React Dashboard]
+```
+
+---
+
+# 🔄 Scan Workflow
+
+```text
+User Initiates Scan
+        │
+        ▼
+Create Scan Record (Pending)
+        │
+        ▼
+Enqueue Celery Task
+        │
+        ▼
+Worker Starts Scan (Running)
+        │
+        ├── XSS Detection
+        ├── SQLi Detection
+        ├── Nmap Scan
+        ├── Nikto Scan
+        └── OWASP ZAP Scan
+        │
+        ▼
+Store Findings
+        │
+        ▼
+Generate AI Remediation
+        │
+        ▼
+Generate PDF Report
+        │
+        ▼
+Update Status (Completed)
+        │
+        ▼
+React UI Displays Results
+```
+
+---
+
+# 🔒 REST API
+
+## Authentication
+
+**Base URL:** `/api/auth`
+
+| Method | Endpoint    | Description                             |
+| ------ | ----------- | --------------------------------------- |
+| POST   | `/register` | Register a new user                     |
+| POST   | `/login`    | Authenticate user and return JWT tokens |
+| GET    | `/me`       | Retrieve authenticated user profile     |
+
+---
+
+## Security Scans
+
+**Base URL:** `/api/scans`
+
+| Method | Endpoint | Description                         |
+| ------ | -------- | ----------------------------------- |
+| POST   | `/`      | Create a new scan job               |
+| GET    | `/`      | Retrieve scan history               |
+| GET    | `/<id>`  | Retrieve scan details               |
+| DELETE | `/<id>`  | Delete scan and associated findings |
+
+---
+
+## Reports
+
+**Base URL:** `/api/reports`
+
+| Method | Endpoint          | Description                                   |
+| ------ | ----------------- | --------------------------------------------- |
+| GET    | `/scans/<id>/pdf` | Download generated security assessment report |
+
+---
+
+# 🔐 Security Scanners
+
+| Scanner             | Purpose                                     |
+| ------------------- | ------------------------------------------- |
+| Custom XSS Scanner  | Reflected XSS Detection                     |
+| Custom SQLi Scanner | SQL Injection Detection                     |
+| Nmap                | Port & Service Discovery                    |
+| Nikto               | Web Server Vulnerability Assessment         |
+| OWASP ZAP           | Dynamic Application Security Testing (DAST) |
+
+---
+
+# 📊 Key Highlights
+
+* Asynchronous scan execution using Celery and Redis.
+* Containerized security scanners with Docker.
+* AI-generated remediation guidance and secure coding examples.
+* Automated PDF security assessment reports.
+* JWT-based authentication and authorization.
+* React + Django full-stack architecture.
+* PostgreSQL-backed vulnerability management.
+* Custom XSS and SQL Injection detection engine.
+
+---
+
+# 🎯 Future Enhancements
+
+* Real-time scan progress using WebSockets.
+* Scheduled and recurring scans.
+* CVE database integration.
+* Multi-user team collaboration.
+* Scan comparison and historical trend analysis.
+* Email notifications for completed scans.
+
+---
 
 
-
-
-**## 🔒 API Endpoints**
-Authentication /api/auth/
-- POST /api/auth/register - Register a new user. Returns JWT credentials.
-- POST /api/auth/login - Authenticate user. Returns JWT credentials.
-- GET /api/auth/me - Retrieve current profile details.
-
-Security Scans /api/scans/
-- POST /api/scans - Create a new scan job (triggers Celery background task).
-- GET /api/scans - List all scan history for the authenticated user.
-- GET /api/scans/<id> - Retrieve details of a specific scan, including vulnerabilities and AI fixes.
-- DELETE /api/scans/<id> - Delete a scan job and its findings database cascades.
-
-Reports /api/reports/
-- GET /api/reports/scans/<id>/pdf - Stream and download dynamically-generated PDF security report.
